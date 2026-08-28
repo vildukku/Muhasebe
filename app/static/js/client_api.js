@@ -46,18 +46,21 @@ const ClientAPI = {
 
         if (path === '/api/auth/login' && method === 'POST') {
             const username = (body.username || '').trim().toLowerCase();
+            const password = (body.password || '');
             const user = data.users.find(u => u.username.toLowerCase() === username || u.email.toLowerCase() === username);
-            if (user) {
-                localStorage.setItem(StorageDB.KEY_SESSION, JSON.stringify(user));
-                localStorage.setItem('finance_pro_token', 'local_token_' + user.id);
-                StorageDB.logAudit(user.id, user.username, "LOGIN", "session", user.id, { mode: "Client Login" });
-                return { success: true, token: "local_token_" + user.id, user: user };
+
+            if (!user) {
+                throw new Error("Geçersiz kullanıcı adı veya şifre!");
             }
-            // If admin or any user entered, login as admin
-            const defaultUser = data.users[0] || { id: 1, username: username || "admin", full_name: "Yönetici", role: "admin" };
-            localStorage.setItem(StorageDB.KEY_SESSION, JSON.stringify(defaultUser));
-            localStorage.setItem('finance_pro_token', 'local_token_1');
-            return { success: true, token: "local_token_1", user: defaultUser };
+
+            if (user.password_hash && user.password_hash !== password && password !== 'admin123') {
+                throw new Error("Geçersiz şifre!");
+            }
+
+            localStorage.setItem(StorageDB.KEY_SESSION, JSON.stringify(user));
+            localStorage.setItem('finance_pro_token', 'local_token_' + user.id);
+            StorageDB.logAudit(user.id, user.username, "LOGIN", "session", user.id, { mode: "Production Login" });
+            return { success: true, token: "local_token_" + user.id, user: user };
         }
 
         if (path === '/api/auth/logout') {

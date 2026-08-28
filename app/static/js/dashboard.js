@@ -30,27 +30,26 @@ const DashboardView = {
             container.innerHTML = `
                 <div class="max-w-xl mx-auto py-12 px-4 text-center">
                     <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-blue-600/10 border border-blue-500/20 text-blue-400 mb-6 shadow-2xl">
-                        <i data-lucide="sparkles" class="w-10 h-10"></i>
+                        <i data-lucide="wallet-cards" class="w-10 h-10"></i>
                     </div>
-                    <h1 class="text-3xl font-extrabold text-white tracking-tight mb-2">Kasa Takip Sistemine Hoş Geldiniz</h1>
-                    <p class="text-sm text-gray-400 mb-8">Henüz hiç kasa veya hesap eklenmedi. Kendi kasalarınızı sıfırdan ekleyebilir veya hazır demo verileriyle hemen deneyebilirsiniz.</p>
+                    <h1 class="text-3xl font-extrabold text-white tracking-tight mb-2">Finans Pro'ya Hoş Geldiniz</h1>
+                    <p class="text-sm text-gray-400 mb-8">Henüz tanımlı bir kasa veya hesap bulunmuyor. Takip etmek istediğiniz banka hesabı, nakit kasa veya kripto cüzdanınızı ekleyerek hemen başlayın.</p>
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto mb-8">
-                        <button onclick="AccountsView.openAccountModal()" class="flex items-center justify-center space-x-2 p-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-xl shadow-blue-900/30 transition-all active:scale-95">
+                    <div class="max-w-xs mx-auto mb-8">
+                        <button onclick="AccountsView.openAccountModal()" class="w-full flex items-center justify-center space-x-2 py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-xl shadow-blue-900/30 transition-all active:scale-95">
                             <i data-lucide="plus-circle" class="w-5 h-5"></i>
-                            <span>+ İlk Kasayı Ekle</span>
-                        </button>
-                        <button onclick="App.loadDemoData()" class="flex items-center justify-center space-x-2 p-4 rounded-2xl bg-gray-800/80 hover:bg-gray-700/80 text-gray-200 font-bold text-sm border border-gray-700 transition-all active:scale-95">
-                            <i data-lucide="database" class="w-5 h-5 text-amber-400"></i>
-                            <span>Demo Verileri Yükle</span>
+                            <span>+ İlk Kasanızı Ekleyin</span>
                         </button>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-gray-900/50 border border-gray-800 text-xs text-gray-400 text-left space-y-2">
-                        <div class="font-semibold text-gray-300">💡 Neler Yapabilirsiniz?</div>
-                        <div>• Banka IBAN hesapları (Garanti, İş Bankası, Yapı Kredi vb.) tanımlayın.</div>
-                        <div>• Elden nakit kasaları (TL, Dolar, Euro) oluşturun.</div>
-                        <div>• USDT ve Bitcoin gibi kripto cüzdanlarınızı anlık kurla takip edin.</div>
+                    <div class="p-5 rounded-2xl bg-gray-900/50 border border-gray-800 text-xs text-gray-400 text-left space-y-2.5">
+                        <div class="font-bold text-gray-200 flex items-center gap-1.5">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-blue-400"></i>
+                            <span>Hızlı Başlangıç İpuçları</span>
+                        </div>
+                        <div>• <strong>Banka Hesabı:</strong> IBAN numaranız ve başlangıç bakiyenizle şirket banka hesabınızı açın.</div>
+                        <div>• <strong>Nakit Kasa:</strong> Ofisteki fiziki nakit paranızı (TL, USD, EUR) kaydedin.</div>
+                        <div>• <strong>Kripto Cüzdan:</strong> USDT, BTC cüzdanlarınızı ekleyip canlı kurla toplam varlığınızı görün.</div>
                     </div>
                 </div>
             `;

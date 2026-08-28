@@ -1,12 +1,12 @@
 /**
  * Kasa & Finans Takip Sistemi - Core SPA Application Engine
- * Supports both Python backend and 100% Serverless GitHub Pages / Offline PWA mode.
+ * Luxury Apple & Revolut UI with zero-backend GitHub Pages mode.
  */
 
 const App = {
     state: {
         user: null,
-        token: localStorage.getItem('token') || null,
+        token: localStorage.getItem('finance_pro_token') || null,
         rates: {},
         currentRoute: 'dashboard',
         accounts: [],
@@ -15,38 +15,33 @@ const App = {
         isClientOnly: false
     },
 
-    // Initialize application
     async init() {
-        console.log("Finance App initializing...");
+        console.log("Finans Pro initializing...");
         this.setupNavigation();
         this.setupModals();
 
-        // Check if hosted on GitHub Pages or file:// -> force ClientOnly mode
         if (window.location.protocol === 'file:' || window.location.hostname.includes('github.io') || window.location.hostname.includes('vercel.app')) {
             this.state.isClientOnly = true;
         }
 
-        // Check if user is logged in
-        if (this.state.token || this.state.isClientOnly) {
+        // Check authentication state
+        const savedSession = localStorage.getItem('finance_pro_auth_session');
+        if (savedSession || this.state.token) {
             const ok = await this.fetchCurrentUser();
             if (ok) {
                 this.showApp();
                 await this.fetchRates();
                 this.navigate(window.location.hash.replace('#', '') || 'dashboard');
-            } else {
-                this.showLogin();
+                return;
             }
-        } else {
-            this.showLogin();
         }
 
-        // Periodically refresh rates every 2 minutes
-        setInterval(() => this.fetchRates(), 120000);
+        // Show Luxury Login Screen by default
+        this.showLogin();
+        if (window.lucide) lucide.createIcons();
     },
 
-    // HTTP API Request / Client Storage Hybrid Engine
     async api(endpoint, options = {}) {
-        // If client only mode or if backend request fails, fallback to ClientAPI
         if (this.state.isClientOnly && window.ClientAPI) {
             try {
                 return await ClientAPI.handle(endpoint, options);
@@ -67,24 +62,17 @@ const App = {
         }
 
         try {
-            const res = await fetch(endpoint, {
-                ...options,
-                headers
-            });
-
+            const res = await fetch(endpoint, { ...options, headers });
             if (res.status === 401) {
                 this.logout(false);
-                this.toast("Oturum süreniz doldu, lütfen tekrar giriş yapın.", "warning");
                 return null;
             }
-
             const data = await res.json();
             if (!res.ok || data.error) {
                 throw new Error(data.message || 'İşlem başarısız');
             }
             return data;
         } catch (err) {
-            // If fetch fails (e.g. 404 on static host), seamlessly fallback to ClientAPI
             if (window.ClientAPI) {
                 this.state.isClientOnly = true;
                 return await ClientAPI.handle(endpoint, options);
@@ -95,7 +83,6 @@ const App = {
         }
     },
 
-    // Fetch Current Logged In User & Permissions
     async fetchCurrentUser() {
         const res = await this.api('/api/auth/me');
         if (res && res.success) {
@@ -106,7 +93,6 @@ const App = {
         return false;
     },
 
-    // Fetch Live Exchange & Crypto Rates
     async fetchRates() {
         const res = await this.api('/api/rates');
         if (res && res.success) {
@@ -121,12 +107,11 @@ const App = {
         if (res && res.success) {
             this.state.rates = res.rates;
             this.renderRatesTicker();
-            this.toast("Döviz ve Kripto kurları güncellendi", "success");
+            this.toast("Canlı kurlar güncellendi", "success");
             this.refreshCurrentView();
         }
     },
 
-    // Rates Ticker in Topbar
     renderRatesTicker() {
         const el = document.getElementById('rates-ticker');
         if (!el || !this.state.rates) return;
@@ -158,7 +143,6 @@ const App = {
         if (window.lucide) lucide.createIcons();
     },
 
-    // User Profile in Topbar & Sidebar
     renderUserProfile() {
         const u = this.state.user;
         if (!u) return;
@@ -167,32 +151,18 @@ const App = {
             admin: { name: "Yönetici", color: "bg-red-500/10 text-red-400 border-red-500/20" },
             manager: { name: "Finans Müdürü", color: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
             operator: { name: "Kasa Sorumlusu", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-            viewer: { name: "Denetçi / İzleyici", color: "bg-slate-500/10 text-slate-400 border-slate-500/20" }
+            viewer: { name: "Denetçi", color: "bg-slate-500/10 text-slate-400 border-slate-500/20" }
         };
 
-        const roleBadge = roleLabels[u.role] || roleLabels.viewer;
+        const roleBadge = roleLabels[u.role] || roleLabels.admin;
 
-        const userEls = document.querySelectorAll('.user-name-display');
-        userEls.forEach(el => el.textContent = u.full_name);
-
-        const userRoleEls = document.querySelectorAll('.user-role-display');
-        userRoleEls.forEach(el => {
+        document.querySelectorAll('.user-name-display').forEach(el => el.textContent = u.full_name);
+        document.querySelectorAll('.user-role-display').forEach(el => {
             el.textContent = roleBadge.name;
-            el.className = `user-role-display text-xs px-2 py-0.5 rounded-full border ${roleBadge.color}`;
-        });
-
-        // Hide admin-only or manager-only navigation links if no permission
-        document.querySelectorAll('[data-permission]').forEach(navItem => {
-            const perm = navItem.getAttribute('data-permission');
-            if (u.permissions && !u.permissions[perm]) {
-                navItem.style.display = 'none';
-            } else {
-                navItem.style.display = '';
-            }
+            el.className = `user-role-display text-[10px] px-2 py-0.5 rounded-full border ${roleBadge.color}`;
         });
     },
 
-    // View Routing
     setupNavigation() {
         window.addEventListener('hashchange', () => {
             const route = window.location.hash.replace('#', '') || 'dashboard';
@@ -211,37 +181,26 @@ const App = {
     navigate(route) {
         this.state.currentRoute = route;
 
-        // Highlight active nav item
+        // Bottom nav & Sidebar active highlights
         document.querySelectorAll('[data-route]').forEach(link => {
             if (link.getAttribute('data-route') === route) {
-                link.classList.add('bg-blue-600/10', 'text-blue-400', 'border-blue-500');
-                link.classList.remove('text-gray-400', 'hover:bg-gray-800/50');
+                link.classList.add('text-blue-400', 'font-bold');
+                link.classList.remove('text-gray-400');
             } else {
-                link.classList.remove('bg-blue-600/10', 'text-blue-400', 'border-blue-500');
-                link.classList.add('text-gray-400', 'hover:bg-gray-800/50');
+                link.classList.remove('text-blue-400', 'font-bold');
+                link.classList.add('text-gray-400');
             }
         });
 
-        // Load route view
-        if (route === 'dashboard') {
-            DashboardView.render();
-        } else if (route === 'accounts') {
-            AccountsView.render();
-        } else if (route === 'transactions') {
-            TransactionsView.render();
-        } else if (route === 'z-reports') {
-            ZReportsView.render();
-        } else if (route === 'subscriptions') {
-            SubscriptionsView.render();
-        } else if (route === 'reports') {
-            ReportsView.render();
-        } else if (route === 'users') {
-            UsersView.render();
-        } else if (route === 'audit-logs') {
-            UsersView.renderAuditLogs();
-        } else {
-            DashboardView.render();
-        }
+        if (route === 'dashboard') DashboardView.render();
+        else if (route === 'accounts') AccountsView.render();
+        else if (route === 'transactions') TransactionsView.render();
+        else if (route === 'z-reports') ZReportsView.render();
+        else if (route === 'subscriptions') SubscriptionsView.render();
+        else if (route === 'reports') ReportsView.render();
+        else if (route === 'users') UsersView.render();
+        else if (route === 'audit-logs') UsersView.renderAuditLogs();
+        else DashboardView.render();
 
         window.scrollTo(0, 0);
     },
@@ -250,18 +209,18 @@ const App = {
         this.navigate(this.state.currentRoute);
     },
 
-    // Show/Hide App and Login Screens
     showApp() {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-screen').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
     },
 
     showLogin() {
         document.getElementById('login-screen').classList.remove('hidden');
         document.getElementById('app-screen').classList.add('hidden');
+        if (window.lucide) lucide.createIcons();
     },
 
-    // User Login Action
     async login(username, password) {
         const res = await this.api('/api/auth/login', {
             method: 'POST',
@@ -270,7 +229,7 @@ const App = {
 
         if (res && res.success) {
             this.state.token = res.token;
-            localStorage.setItem('token', res.token);
+            localStorage.setItem('finance_pro_token', res.token);
             this.state.user = res.user;
             await this.fetchCurrentUser();
             this.toast(`Hoş geldiniz, ${res.user.full_name}!`, "success");
@@ -280,29 +239,38 @@ const App = {
         }
     },
 
-    // User Logout Action
     async logout(notify = true) {
-        if (this.state.token) {
-            await this.api('/api/auth/logout', { method: 'POST' });
-        }
-        localStorage.removeItem('token');
+        localStorage.removeItem('finance_pro_token');
+        localStorage.removeItem('finance_pro_auth_session');
         this.state.token = null;
         this.state.user = null;
         this.showLogin();
         if (notify) this.toast("Güvenli çıkış yapıldı", "info");
     },
 
-    // Universal Toast Notification Engine
+    loadDemoData() {
+        StorageDB.resetToDemo();
+        this.toast("Demo verileri yüklendi", "success");
+        this.refreshCurrentView();
+    },
+
+    resetToClean() {
+        if (!confirm("Tüm kasa ve işlem verilerini sıfırlayıp 0 TL ile temiz başlamak istediğinize emin misiniz?")) return;
+        StorageDB.resetToClean();
+        this.toast("Sistem sıfırlandı. Temiz kasa başlangıcı hazır.", "info");
+        this.refreshCurrentView();
+    },
+
     toast(message, type = "info") {
         const container = document.getElementById('toast-container');
         if (!container) return;
 
         const toast = document.createElement('div');
         const colors = {
-            success: 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200',
-            error: 'bg-rose-950/90 border-rose-500/40 text-rose-200',
-            warning: 'bg-amber-950/90 border-amber-500/40 text-amber-200',
-            info: 'bg-slate-900/90 border-blue-500/40 text-blue-200'
+            success: 'bg-emerald-950/95 border-emerald-500/40 text-emerald-200',
+            error: 'bg-rose-950/95 border-rose-500/40 text-rose-200',
+            warning: 'bg-amber-950/95 border-amber-500/40 text-amber-200',
+            info: 'bg-slate-900/95 border-blue-500/40 text-blue-200'
         };
         const icons = {
             success: 'check-circle',
@@ -311,10 +279,10 @@ const App = {
             info: 'info'
         };
 
-        toast.className = `toast-item flex items-center space-x-3 px-4 py-3 rounded-xl border backdrop-blur-md shadow-2xl text-sm ${colors[type] || colors.info}`;
+        toast.className = `toast-item flex items-center space-x-3 px-4 py-3 rounded-2xl border backdrop-blur-xl shadow-2xl text-xs font-semibold ${colors[type] || colors.info}`;
         toast.innerHTML = `
-            <i data-lucide="${icons[type] || 'info'}" class="w-5 h-5 flex-shrink-0"></i>
-            <span class="font-medium">${message}</span>
+            <i data-lucide="${icons[type] || 'info'}" class="w-4 h-4 flex-shrink-0"></i>
+            <span>${message}</span>
         `;
 
         container.appendChild(toast);
@@ -325,10 +293,9 @@ const App = {
             toast.style.transform = 'translateY(-10px)';
             toast.style.transition = 'all 0.3s ease';
             setTimeout(() => toast.remove(), 300);
-        }, 3800);
+        }, 3500);
     },
 
-    // Modal Helpers
     setupModals() {
         document.querySelectorAll('[data-close-modal]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -337,7 +304,6 @@ const App = {
             });
         });
 
-        // Close on escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal-backdrop:not(.hidden)').forEach(m => m.classList.add('hidden'));
@@ -366,7 +332,6 @@ const App = {
         }
     },
 
-    // Currency Formatter
     formatCurrency(amount, currency = 'TRY', showDecimals = true) {
         const num = Number(amount) || 0;
         const curr = (currency || 'TRY').toUpperCase();
@@ -399,7 +364,6 @@ const App = {
             const options = {
                 day: '2-digit',
                 month: 'short',
-                year: 'numeric',
                 ...(includeTime ? { hour: '2-digit', minute: '2-digit' } : {})
             };
             return d.toLocaleDateString('tr-TR', options);
@@ -411,7 +375,6 @@ const App = {
 
 window.App = App;
 
-// Bootstrap on DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
 });

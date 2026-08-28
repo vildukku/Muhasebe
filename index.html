@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0f17">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Finans Pro">
+    <link rel="manifest" href="./manifest.json">
+    <title>Kasa & Finans Takip Sistemi | Finans Pro</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="bg-[#0b0f17] text-gray-100 min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Hidden File Input for Backup Import -->
+    <input type="file" id="backup-file-input" accept=".json" class="hidden" onchange="App.handleBackupImport(event)">
+
+    <!-- ==================================================== -->
+    <!-- 1. LOGIN SCREEN (If unauthenticated) -->
+    <!-- ==================================================== -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-[#070a0f] via-[#0b0f17] to-[#101726]">
+        <!-- Background Ambient Glow -->
+        <div class="absolute w-72 md:w-96 h-72 md:h-96 bg-blue-600/10 rounded-full blur-3xl -top-10 -left-10 pointer-events-none"></div>
+        <div class="absolute w-72 md:w-96 h-72 md:h-96 bg-emerald-600/10 rounded-full blur-3xl -bottom-10 -right-10 pointer-events-none"></div>
+
+        <div class="glass-card max-w-md w-full p-6 md:p-8 relative z-10 border border-gray-800/80 shadow-2xl">
+            <div class="text-center mb-6 md:mb-8">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600/20 border border-blue-500/30 text-blue-400 mb-3 shadow-lg shadow-blue-900/20">
+                    <i data-lucide="wallet-cards" class="w-8 h-8"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold text-white tracking-tight">Kasa & Finans Takip</h1>
+                <p class="text-xs text-gray-400 mt-1">Gelişmiş Çoklu Kasa, Kripto ve Nakit Akışı Yönetim Platformu</p>
+            </div>
+
+            <form onsubmit="event.preventDefault(); App.login(document.getElementById('login-username').value, document.getElementById('login-password').value);" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">Kullanıcı Adı veya E-Posta</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="w-4 h-4 text-gray-500 absolute left-3 top-3.5"></i>
+                        <input type="text" id="login-username" value="admin" required class="w-full bg-gray-900/80 border border-gray-700/80 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all" placeholder="admin">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">Şifre</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="w-4 h-4 text-gray-500 absolute left-3 top-3.5"></i>
+                        <input type="password" id="login-password" value="admin123" required class="w-full bg-gray-900/80 border border-gray-700/80 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all" placeholder="••••••••">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full mt-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-lg shadow-blue-900/40 transition-all active:scale-[0.98]">
+                    Güvenli Giriş Yap
+                </button>
+            </form>
+
+            <!-- Quick One-Click Demo Role Logins -->
+            <div class="mt-6 pt-6 border-t border-gray-800 text-center">
+                <div class="text-xs text-gray-500 font-medium mb-3">Hızlı Demo Rolü Seçimi:</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="App.login('admin', 'admin123')" class="px-2.5 py-2.5 rounded-xl bg-gray-800/60 hover:bg-red-950/30 text-red-400 hover:border-red-500/40 border border-gray-700/50 text-xs font-medium transition-all">
+                        👑 Admin
+                    </button>
+                    <button type="button" onclick="App.login('manager', 'manager123')" class="px-2.5 py-2.5 rounded-xl bg-gray-800/60 hover:bg-purple-950/30 text-purple-400 hover:border-purple-500/40 border border-gray-700/50 text-xs font-medium transition-all">
+                        📊 Finans Müdürü
+                    </button>
+                    <button type="button" onclick="App.login('operator', 'operator123')" class="px-2.5 py-2.5 rounded-xl bg-gray-800/60 hover:bg-blue-950/30 text-blue-400 hover:border-blue-500/40 border border-gray-700/50 text-xs font-medium transition-all">
+                        💼 Kasa Sorumlusu
+                    </button>
+                    <button type="button" onclick="App.login('viewer', 'viewer123')" class="px-2.5 py-2.5 rounded-xl bg-gray-800/60 hover:bg-slate-900 text-slate-400 hover:border-slate-500/40 border border-gray-700/50 text-xs font-medium transition-all">
+                        👁️ Denetçi / İzleyici
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================================================== -->
+    <!-- 2. MAIN APPLICATION WORKSPACE -->
+    <!-- ==================================================== -->
+    <div id="app-screen" class="hidden min-h-screen flex flex-col md:flex-row pb-16 md:pb-0">
+        <!-- Desktop Sidebar Navigation (Hidden on Mobile) -->
+        <aside id="sidebar" class="hidden md:flex w-64 bg-[#0e131f] border-r border-gray-800 flex-col flex-shrink-0 z-20">
+            <!-- Brand Logo -->
+            <div class="h-16 px-6 flex items-center space-x-3 border-b border-gray-800">
+                <div class="p-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-900/30">
+                    <i data-lucide="wallet-cards" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-extrabold text-base tracking-tight text-white">Finans Pro</span>
+                    <span class="block text-[10px] text-blue-400 font-mono">GitHub Pages • v2.0</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+                <a href="#dashboard" data-route="dashboard" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium border-l-2 transition-all">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    <span>Gösterge Paneli</span>
+                </a>
+                <a href="#accounts" data-route="accounts" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium border-l-2 transition-all">
+                    <i data-lucide="layers" class="w-4 h-4"></i>
+                    <span>Kasa & Hesaplar</span>
+                </a>
+                <a href="#transactions" data-route="transactions" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium border-l-2 transition-all">
+                    <i data-lucide="receipt-text" class="w-4 h-4"></i>
+                    <span>İşlemler (Gelir/Gider)</span>
+                </a>
+                <a href="#z-reports" data-route="z-reports" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium border-l-2 transition-all">
+                    <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+                    <span>Z-Raporu & Mutabakat</span>
+                </a>
+                <a href="#subscriptions" data-route="subscriptions" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium border-l-2 transition-all">
+                    <i data-lucide="repeat" class="w-4 h-4"></i>
+                    <span>Abonelik & Sabit Gider</span>
+                </a>
+                <a href="#reports" data-route="reports" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium border-l-2 transition-all">
+                    <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                    <span>Raporlar & Analiz</span>
+                </a>
+
+                <div class="pt-4 mt-4 border-t border-gray-800/80">
+                    <div class="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500">Güvenlik & Yedek</div>
+                    <a href="#users" data-route="users" data-permission="can_manage_users" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium border-l-2 transition-all">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        <span>Kullanıcılar (RBAC)</span>
+                    </a>
+                    <a href="#audit-logs" data-route="audit-logs" data-permission="can_view_audit_logs" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium border-l-2 transition-all">
+                        <i data-lucide="fingerprint" class="w-4 h-4"></i>
+                        <span>Denetim İzi (Audit Log)</span>
+                    </a>
+                    <button onclick="StorageDB.exportBackupJSON()" class="w-full flex items-center space-x-3 px-3.5 py-2 rounded-xl text-xs text-gray-400 hover:text-white hover:bg-gray-800/40 transition-all text-left">
+                        <i data-lucide="download" class="w-4 h-4 text-emerald-400"></i>
+                        <span>Verileri Yedekle (JSON)</span>
+                    </button>
+                    <button onclick="document.getElementById('backup-file-input').click()" class="w-full flex items-center space-x-3 px-3.5 py-2 rounded-xl text-xs text-gray-400 hover:text-white hover:bg-gray-800/40 transition-all text-left">
+                        <i data-lucide="upload" class="w-4 h-4 text-blue-400"></i>
+                        <span>Yedekten Geri Yükle</span>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Bottom User Profile Card -->
+            <div class="p-3 border-t border-gray-800">
+                <div class="p-3 rounded-xl bg-gray-900/60 border border-gray-800 flex items-center justify-between">
+                    <div class="flex items-center space-x-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold text-white truncate user-name-display">Kullanıcı</div>
+                            <div class="user-role-display mt-0.5">Rol</div>
+                        </div>
+                    </div>
+                    <button onclick="App.logout()" class="p-1.5 rounded-lg text-gray-400 hover:text-rose-400 hover:bg-rose-950/20 transition-colors" title="Çıkış Yap">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Body Area -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <!-- Topbar Header with Live Rates Ticker -->
+            <header id="header" class="h-16 px-4 md:px-6 bg-[#0e131f]/90 backdrop-blur-md border-b border-gray-800 flex items-center justify-between z-10">
+                <!-- Mobile Brand + Menu Toggle -->
+                <div class="flex items-center space-x-3 md:hidden">
+                    <button onclick="App.toggleMobileDrawer()" class="p-2 rounded-xl bg-gray-800 text-gray-300">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <div class="p-1.5 rounded-lg bg-blue-600 text-white">
+                            <i data-lucide="wallet-cards" class="w-4 h-4"></i>
+                        </div>
+                        <span class="font-bold text-sm text-white">Finans Pro</span>
+                    </div>
+                </div>
+
+                <!-- Rates Ticker (Desktop / Tablet) -->
+                <div id="rates-ticker" class="hidden md:flex items-center">
+                    <!-- Dynamic Live Ticker Injected Here -->
+                </div>
+
+                <div class="flex items-center space-x-2 md:space-x-3 ml-auto">
+                    <!-- Quick Transfer Trigger (Desktop) -->
+                    <button onclick="AccountsView.openTransferModal()" class="hidden md:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 text-xs font-semibold transition-all">
+                        <i data-lucide="arrow-left-right" class="w-3.5 h-3.5"></i>
+                        <span>Virman Yap</span>
+                    </button>
+
+                    <!-- Quick Income/Expense Direct Action -->
+                    <button onclick="TransactionsView.openTransactionModal('income')" class="inline-flex items-center space-x-1 px-2.5 md:px-3 py-1.5 rounded-lg bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 text-xs font-semibold transition-all">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        <span>Gelir</span>
+                    </button>
+                    <button onclick="TransactionsView.openTransactionModal('expense')" class="inline-flex items-center space-x-1 px-2.5 md:px-3 py-1.5 rounded-lg bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-500/20 text-xs font-semibold transition-all">
+                        <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+                        <span>Gider</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dynamic View Container -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-8">
+                <div id="main-content" class="max-w-7xl mx-auto">
+                    <!-- Loaded dynamically via SPA router -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <!-- ==================================================== -->
+    <!-- 3. MOBILE BOTTOM NAVIGATION (Tab Bar for Phones) -->
+    <!-- ==================================================== -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0e131f]/95 backdrop-blur-lg border-t border-gray-800 mobile-bottom-nav px-2 py-1.5 flex items-center justify-around">
+        <a href="#dashboard" data-route="dashboard" class="flex flex-col items-center py-1 px-2.5 text-blue-400 text-[10px] font-medium transition-colors">
+            <i data-lucide="layout-dashboard" class="w-5 h-5 mb-0.5"></i>
+            <span>Panel</span>
+        </a>
+        <a href="#accounts" data-route="accounts" class="flex flex-col items-center py-1 px-2.5 text-gray-400 hover:text-white text-[10px] font-medium transition-colors">
+            <i data-lucide="layers" class="w-5 h-5 mb-0.5"></i>
+            <span>Kasalar</span>
+        </a>
+        <!-- Center Floating Action Button for Mobile -->
+        <button onclick="TransactionsView.openTransactionModal('income')" class="flex flex-col items-center justify-center -mt-5 w-12 h-12 rounded-full bg-blue-600 text-white shadow-xl shadow-blue-900/50 border-2 border-[#0e131f] active:scale-95 transition-transform">
+            <i data-lucide="plus" class="w-6 h-6"></i>
+        </button>
+        <a href="#transactions" data-route="transactions" class="flex flex-col items-center py-1 px-2.5 text-gray-400 hover:text-white text-[10px] font-medium transition-colors">
+            <i data-lucide="receipt-text" class="w-5 h-5 mb-0.5"></i>
+            <span>İşlemler</span>
+        </a>
+        <button onclick="App.toggleMobileDrawer()" class="flex flex-col items-center py-1 px-2.5 text-gray-400 hover:text-white text-[10px] font-medium transition-colors">
+            <i data-lucide="grid" class="w-5 h-5 mb-0.5"></i>
+            <span>Menü</span>
+        </button>
+    </nav>
+
+    <!-- Mobile Drawer Side Sheet -->
+    <div id="mobile-drawer" class="md:hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden">
+        <div class="w-72 max-w-[85vw] h-full bg-[#0e131f] border-r border-gray-800 p-5 flex flex-col justify-between overflow-y-auto">
+            <div>
+                <div class="flex items-center justify-between pb-4 border-b border-gray-800 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="p-2 rounded-xl bg-blue-600 text-white">
+                            <i data-lucide="wallet-cards" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-sm text-white">Finans Pro</div>
+                            <div class="text-[10px] text-blue-400">Kasa & Varlık Takip</div>
+                        </div>
+                    </div>
+                    <button onclick="App.toggleMobileDrawer()" class="p-1 rounded-lg text-gray-400 hover:text-white">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-2 text-sm">
+                    <a href="#z-reports" onclick="App.toggleMobileDrawer()" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-gray-900/60 text-gray-300">
+                        <i data-lucide="clipboard-check" class="w-4 h-4 text-amber-400"></i>
+                        <span>Z-Raporu & Mutabakat</span>
+                    </a>
+                    <a href="#subscriptions" onclick="App.toggleMobileDrawer()" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-gray-900/60 text-gray-300">
+                        <i data-lucide="repeat" class="w-4 h-4 text-purple-400"></i>
+                        <span>Abonelikler & Sabit Gider</span>
+                    </a>
+                    <a href="#reports" onclick="App.toggleMobileDrawer()" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-gray-900/60 text-gray-300">
+                        <i data-lucide="pie-chart" class="w-4 h-4 text-blue-400"></i>
+                        <span>Raporlar & Analiz</span>
+                    </a>
+                    <a href="#users" data-permission="can_manage_users" onclick="App.toggleMobileDrawer()" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-gray-900/60 text-gray-300">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-red-400"></i>
+                        <span>Kullanıcılar (RBAC)</span>
+                    </a>
+                    <a href="#audit-logs" data-permission="can_view_audit_logs" onclick="App.toggleMobileDrawer()" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-gray-900/60 text-gray-300">
+                        <i data-lucide="fingerprint" class="w-4 h-4 text-slate-400"></i>
+                        <span>Denetim İzi (Audit Log)</span>
+                    </a>
+
+                    <div class="pt-2 border-t border-gray-800">
+                        <button onclick="StorageDB.exportBackupJSON()" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-emerald-950/30 text-emerald-300 border border-emerald-800/30 text-xs font-semibold">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Verileri Yedekle (JSON)</span>
+                        </button>
+                        <button onclick="document.getElementById('backup-file-input').click()" class="w-full mt-2 flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-blue-950/30 text-blue-300 border border-blue-800/30 text-xs font-semibold">
+                            <i data-lucide="upload" class="w-4 h-4"></i>
+                            <span>Yedekten Geri Yükle</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-gray-800">
+                <button onclick="App.logout()" class="w-full py-2.5 rounded-xl bg-rose-950/40 text-rose-400 border border-rose-800/30 text-xs font-bold flex items-center justify-center space-x-2">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span>Çıkış Yap</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================================================== -->
+    <!-- 4. UNIVERSAL MODAL DIALOGS -->
+    <!-- ==================================================== -->
+
+    <!-- Modal 1: Quick Transaction (Income / Expense) -->
+    <div id="transaction-modal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+        <div class="glass-modal max-w-lg w-full rounded-2xl p-5 md:p-6 relative shadow-2xl border border-gray-700">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-800 mb-4">
+                <h3 id="tx-modal-title" class="text-lg font-bold text-white">Yeni İşlem</h3>
+                <button type="button" data-close-modal class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="TransactionsView.saveTransaction(event)" class="space-y-3.5">
+                <input type="hidden" id="tx-type" value="income">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Kasa / Hesap *</label>
+                        <select id="tx-account" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Kategori</label>
+                        <select id="tx-category" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"></select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Tutar *</label>
+                        <input type="number" step="0.000001" id="tx-amount" required placeholder="0.00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm font-bold text-white font-mono focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">İşlem Tarihi & Saati</label>
+                        <input type="datetime-local" id="tx-date" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Açıklama / Not</label>
+                    <input type="text" id="tx-description" placeholder="Örn: Müşteri hakediş tahsilatı veya sunucu faturası" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <!-- Receipt / Invoice Attachment -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Fiş / Fatura / Dekont (Kamera veya PDF)</label>
+                    <div class="p-3 rounded-xl bg-gray-900/60 border border-dashed border-gray-700 text-center">
+                        <input type="file" id="tx-file-input" accept="image/*,application/pdf" capture="environment" onchange="TransactionsView.handleFileUpload(event)" class="text-xs text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+                        <div id="tx-file-preview" class="mt-2 hidden"></div>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex items-center justify-end space-x-3">
+                    <button type="button" data-close-modal class="px-4 py-2.5 rounded-xl bg-gray-800 text-gray-300 text-xs font-semibold hover:bg-gray-700 transition-colors">İptal</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-900/30 transition-all">İşlemi Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Modal 2: Inter-Account Transfer (Virman) -->
+    <div id="transfer-modal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+        <div class="glass-modal max-w-lg w-full rounded-2xl p-5 md:p-6 relative shadow-2xl border border-gray-700">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-800 mb-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="arrow-left-right" class="w-5 h-5 text-blue-400"></i>
+                    <span>Kasalar Arası Transfer (Virman)</span>
+                </h3>
+                <button type="button" data-close-modal class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="AccountsView.submitTransfer(event)" class="space-y-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Kaynak Kasa *</label>
+                        <select id="transfer-from-account" onchange="AccountsView.calculateTransferConversion()" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Hedef Kasa *</label>
+                        <select id="transfer-to-account" onchange="AccountsView.calculateTransferConversion()" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"></select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Çıkış Tutarı *</label>
+                        <input type="number" step="0.000001" id="transfer-amount" oninput="AccountsView.calculateTransferConversion()" required placeholder="0.00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm font-bold text-white font-mono focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Hedefe Geçecek Tutar</label>
+                        <input type="number" step="0.000001" id="transfer-target-amount" placeholder="Otomatik Hesaplanır" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm font-bold text-emerald-400 font-mono focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div id="transfer-conversion-info"></div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Transfer Açıklaması</label>
+                    <input type="text" id="transfer-description" value="Kasalar arası fon transferi" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="pt-3 flex items-center justify-end space-x-3">
+                    <button type="button" data-close-modal class="px-4 py-2.5 rounded-xl bg-gray-800 text-gray-300 text-xs font-semibold hover:bg-gray-700 transition-colors">İptal</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-900/30 transition-all">Transferi Tamamla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Modal 3: Account Create / Edit -->
+    <div id="account-modal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+        <div class="glass-modal max-w-lg w-full rounded-2xl p-5 md:p-6 relative shadow-2xl border border-gray-700">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-800 mb-4">
+                <h3 id="account-modal-title" class="text-lg font-bold text-white">Yeni Kasa Ekle</h3>
+                <button type="button" data-close-modal class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="AccountsView.saveAccount(event)" class="space-y-3.5">
+                <input type="hidden" id="account-id" value="">
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Kasa / Hesap Adı *</label>
+                    <input type="text" id="account-name" required placeholder="Örn: Garanti BBVA Ticari veya Binance Cüzdanı" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Hesap Türü</label>
+                        <select id="account-type" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                            <option value="bank">Banka Hesabı (IBAN)</option>
+                            <option value="cash">Elden Nakit Kasa</option>
+                            <option value="crypto">Kripto Cüzdanı</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Para Birimi</label>
+                        <select id="account-currency" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                            <option value="TRY">TRY (₺)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="USDT">USDT (₮)</option>
+                            <option value="BTC">BTC (₿)</option>
+                            <option value="ETH">ETH (Ξ)</option>
+                            <option value="GBP">GBP (£)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Banka Adı / Platform</label>
+                        <input type="text" id="account-bank-name" placeholder="Örn: Garanti, Binance" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Başlangıç Bakiyesi</label>
+                        <input type="number" step="0.000001" id="account-balance" value="0" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">IBAN / Cüzdan Adresi</label>
+                    <input type="text" id="account-iban" placeholder="TR... veya 0x... / bc1..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Notlar</label>
+                    <input type="text" id="account-notes" placeholder="Opsiyonel kasa notları..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="pt-3 flex items-center justify-end space-x-3">
+                    <button type="button" data-close-modal class="px-4 py-2.5 rounded-xl bg-gray-800 text-gray-300 text-xs font-semibold hover:bg-gray-700 transition-colors">İptal</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-900/30 transition-all">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Modal 4: Subscription Create / Edit -->
+    <div id="subscription-modal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+        <div class="glass-modal max-w-lg w-full rounded-2xl p-5 md:p-6 relative shadow-2xl border border-gray-700">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-800 mb-4">
+                <h3 id="sub-modal-title" class="text-lg font-bold text-white">Yeni Abonelik / Gider Ekle</h3>
+                <button type="button" data-close-modal class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="SubscriptionsView.saveSubscription(event)" class="space-y-3.5">
+                <input type="hidden" id="sub-id" value="">
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Abonelik / Gider Başlığı *</label>
+                    <input type="text" id="sub-title" required placeholder="Örn: AWS Bulut, OpenAI API, Ofis Kirası" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Kategori</label>
+                        <select id="sub-category" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Ödeme Kasa</label>
+                        <select id="sub-account" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"></select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Tutar *</label>
+                        <input type="number" step="0.01" id="sub-amount" required placeholder="0.00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Para Birimi</label>
+                        <select id="sub-currency" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                            <option value="TRY">TRY (₺)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="USDT">USDT (₮)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">Periyot</label>
+                        <select id="sub-cycle" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                            <option value="monthly">Aylık</option>
+                            <option value="yearly">Yıllık</option>
+                            <option value="weekly">Haftalık</option>
+                            <option value="quarterly">3 Aylık</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Sonraki Ödeme Tarihi *</label>
+                    <input type="date" id="sub-due-date" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Notlar</label>
+                    <input type="text" id="sub-notes" placeholder="Opsiyonel not..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="pt-3 flex items-center justify-end space-x-3">
+                    <button type="button" data-close-modal class="px-4 py-2.5 rounded-xl bg-gray-800 text-gray-300 text-xs font-semibold hover:bg-gray-700 transition-colors">İptal</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-lg shadow-purple-900/30 transition-all">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Modal 5: User Create / Edit (RBAC) -->
+    <div id="user-modal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden">
+        <div class="glass-modal max-w-md w-full rounded-2xl p-5 md:p-6 relative shadow-2xl border border-gray-700">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-800 mb-4">
+                <h3 id="user-modal-title" class="text-lg font-bold text-white">Kullanıcı Yönetimi</h3>
+                <button type="button" data-close-modal class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form onsubmit="UsersView.saveUser(event)" class="space-y-3.5">
+                <input type="hidden" id="user-id" value="">
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Kullanıcı Adı *</label>
+                    <input type="text" id="user-username" required placeholder="ornek_kullanici" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Ad Soyad *</label>
+                    <input type="text" id="user-fullname" required placeholder="Ahmet Yılmaz" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">E-Posta Adresi</label>
+                    <input type="email" id="user-email" placeholder="ahmet@sirket.com" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Rol (Yetki Seviyesi) *</label>
+                    <select id="user-role" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                        <option value="admin">Yönetici (Admin) - Tam Yetki</option>
+                        <option value="manager">Finans Müdürü (Manager) - Kasa & Raporlar</option>
+                        <option value="operator" selected>Kasa Sorumlusu (Operator) - Gelir / Gider Girişi</option>
+                        <option value="viewer">Denetçi (Viewer) - Yalnızca İnceleme / Okuma</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Şifre</label>
+                    <input type="password" id="user-password" placeholder="Parola belirleyin" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div id="user-status-group" class="hidden flex items-center space-x-2 pt-2">
+                    <input type="checkbox" id="user-active" class="w-4 h-4 rounded text-blue-600 bg-gray-900 border-gray-700">
+                    <label for="user-active" class="text-xs text-gray-300">Kullanıcı Hesabı Aktif</label>
+                </div>
+
+                <div class="pt-3 flex items-center justify-end space-x-3">
+                    <button type="button" data-close-modal class="px-4 py-2.5 rounded-xl bg-gray-800 text-gray-300 text-xs font-semibold hover:bg-gray-700 transition-colors">İptal</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-900/30 transition-all">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Modal 6: Receipt / Invoice Full View -->
+    <div id="receipt-view-modal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+        <div class="glass-modal max-w-2xl w-full rounded-2xl p-5 md:p-6 relative shadow-2xl border border-gray-700">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-800 mb-4">
+                <h3 id="receipt-modal-title" class="text-base font-bold text-white truncate">Fiş / Fatura Önizleme</h3>
+                <div class="flex items-center space-x-3">
+                    <a id="receipt-download-btn" href="#" download class="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-blue-400 transition-colors" title="İndir">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                    </a>
+                    <button type="button" data-close-modal class="text-gray-400 hover:text-white">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-center min-h-[300px] max-h-[70vh] overflow-auto bg-black/40 rounded-xl p-2">
+                <img id="receipt-modal-img" src="" alt="Fiş Görseli" class="max-h-[65vh] max-w-full object-contain rounded-lg">
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Client Scripts (StorageDB & ClientAPI first for GitHub Pages fallback) -->
+    <script src="./js/storage_engine.js"></script>
+    <script src="./js/client_api.js"></script>
+    <script src="./js/app.js"></script>
+    <script src="./js/dashboard.js"></script>
+    <script src="./js/accounts.js"></script>
+    <script src="./js/transactions.js"></script>
+    <script src="./js/zreports.js"></script>
+    <script src="./js/subscriptions.js"></script>
+    <script src="./js/reports.js"></script>
+    <script src="./js/users.js"></script>
+
+    <script>
+        // Backup Import Handler
+        App.handleBackupImport = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            try {
+                await StorageDB.importBackupJSON(file);
+                App.toast("Yedek başarıyla yüklendi ve geri yüklendi!", "success");
+                App.refreshCurrentView();
+            } catch (err) {
+                App.toast(err.message || "Yedek yükleme başarısız", "error");
+            }
+            event.target.value = '';
+        };
+    </script>
+</body>
+</html>

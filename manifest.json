@@ -1,0 +1,22 @@
+{
+  "name": "Kasa & Finans Takip Sistemi",
+  "short_name": "Finans Pro",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0f17",
+  "theme_color": "#0b0f17",
+  "orientation": "portrait-primary",
+  "description": "Çoklu Kasa, Banka ve Kripto Varlık Takip Uygulaması",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+/* Modern FinTech & Dark UI Custom Stylesheet */
+:root {
+    --bg-main: #0b0f17;
+    --bg-card: #111827;
+    --bg-card-hover: #1f2937;
+    --border-color: #1f293d;
+    --primary: #3b82f6;
+    --primary-glow: rgba(59, 130, 246, 0.15);
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+}
+
+/* Safe Area Insets for Mobile (iPhone Notch & Home Bar) */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    touch-action: manipulation;
+}
+
+/* Mobile-First Glassmorphism Cards */
+.glass-card {
+    background: rgba(17, 24, 39, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s ease-in-out;
+}
+
+.glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.glass-modal {
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Mobile Bottom Navigation */
+.mobile-bottom-nav {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 768px) {
+    /* Mobile full screen or bottom sheet modals */
+    .glass-modal {
+        max-height: 90vh;
+        overflow-y: auto;
+        border-radius: 1.25rem;
+    }
+    
+    /* Make inputs and buttons touch-friendly */
+    input, select, button {
+        min-height: 42px;
+    }
+
+    main {
+        padding-bottom: 5.5rem !important; /* Space for bottom nav */
+    }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* Currency and Metric Animations */
+.metric-value {
+    letter-spacing: -0.025em;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Toast Notifications */
+#toast-container {
+    position: fixed;
+    bottom: 5.5rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: 24rem;
+    margin-left: auto;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
+}
+
+@media (min-width: 768px) {
+    #toast-container {
+        bottom: 1.5rem;
+        right: 1.5rem;
+        left: auto;
+    }
+}
+
+.toast-item {
+    pointer-events: auto;
+    animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Print Styles for Z-Report & Receipts */
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+    #sidebar, #header, #toast-container, .mobile-bottom-nav, .no-print {
+        display: none !important;
+    }
+    .print-only {
+        display: block !important;
+    }
+    .glass-card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+    .text-gray-400, .text-gray-300 {
+        color: #555 !important;
+    }
+}

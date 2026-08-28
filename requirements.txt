@@ -1,0 +1,7 @@
+# Kasa & Finans Takip Sistemi
+# Bu sistem Python 3 standart kütüphaneleri (sqlite3, http.server, hashlib, json) ile
+# sıfır harici bağımlılıkla (Zero-Dependency) çalışacak şekilde tasarlanmıştır.
+
+# Opsiyonel Geliştirici & Test Araçları:
+# pytest>=7.0.0
+# requests>=2.28.0

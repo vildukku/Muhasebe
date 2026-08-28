@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: muhasebe-finans-takip
+    env: python
+    buildCommand: ""
+    startCommand: "python3 run.py --host 0.0.0.0 --port $PORT"
+    plan: free
+    autoDeploy: true

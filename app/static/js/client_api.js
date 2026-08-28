@@ -12,11 +12,18 @@ const ClientAPI = {
         const body = options.body ? JSON.parse(options.body) : {};
 
         const data = StorageDB.load();
-        const session = JSON.parse(localStorage.getItem(StorageDB.KEY_SESSION) || 'null') || data.users[0];
+        const rawSession = localStorage.getItem(StorageDB.KEY_SESSION);
+        const session = rawSession ? JSON.parse(rawSession) : null;
 
         // 1. Auth & Me
         if (path === '/api/auth/me') {
-            const user = data.users.find(u => u.id === session.id) || data.users[0];
+            if (!session) {
+                return { success: false, message: "Oturum açılmamış" };
+            }
+            const user = data.users.find(u => u.id === session.id);
+            if (!user) {
+                return { success: false, message: "Kullanıcı bulunamadı" };
+            }
             const role = user.role;
             return {
                 success: true,
@@ -42,17 +49,20 @@ const ClientAPI = {
             const user = data.users.find(u => u.username.toLowerCase() === username || u.email.toLowerCase() === username);
             if (user) {
                 localStorage.setItem(StorageDB.KEY_SESSION, JSON.stringify(user));
-                StorageDB.logAudit(user.id, user.username, "LOGIN", "session", user.id, { mode: "GitHub Pages / Local" });
+                localStorage.setItem('finance_pro_token', 'local_token_' + user.id);
+                StorageDB.logAudit(user.id, user.username, "LOGIN", "session", user.id, { mode: "Client Login" });
                 return { success: true, token: "local_token_" + user.id, user: user };
             }
-            // Auto login as admin if not found in client mode
-            const admin = data.users[0];
-            localStorage.setItem(StorageDB.KEY_SESSION, JSON.stringify(admin));
-            return { success: true, token: "local_token_1", user: admin };
+            // If admin or any user entered, login as admin
+            const defaultUser = data.users[0] || { id: 1, username: username || "admin", full_name: "Yönetici", role: "admin" };
+            localStorage.setItem(StorageDB.KEY_SESSION, JSON.stringify(defaultUser));
+            localStorage.setItem('finance_pro_token', 'local_token_1');
+            return { success: true, token: "local_token_1", user: defaultUser };
         }
 
         if (path === '/api/auth/logout') {
             localStorage.removeItem(StorageDB.KEY_SESSION);
+            localStorage.removeItem('finance_pro_token');
             return { success: true, message: "Çıkış yapıldı" };
         }
 
